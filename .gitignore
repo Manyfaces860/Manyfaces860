@@ -1,0 +1,6 @@
+.env
+README_SNIPPET.md
+SETUP.md
+.idea
+.DS_Store
+scripts/__pycache__/

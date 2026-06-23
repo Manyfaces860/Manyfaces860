@@ -1,0 +1,58 @@
+name: Generate CCG Contribution Art
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "20 0 * * *"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/**"
+      - ".github/workflows/generate-contribution-art.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: contribution-art
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout profile repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate animated SVG files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: Manyfaces860
+        run: |
+          mkdir -p dist
+          python scripts/render_centipede.py
+          python scripts/render_scanner.py
+
+      - name: Verify generated files
+        run: |
+          test -s dist/centipede-contribution.svg
+          test -s dist/scanner-contribution.svg
+          ls -lh dist
+
+      - name: Publish generated files to output branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: output
+          publish_dir: ./dist
+          force_orphan: true
+          commit_message: "chore: update contribution art"
